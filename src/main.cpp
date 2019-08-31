@@ -18,7 +18,8 @@
 // To run, set your ESP8266 build to 160MHz, update the SSID info, and upload.
 
 // Randomly picked URL
-char *URL = "http://ice1.somafm.com/u80s-128-mp3";
+const char *URL = "http://ice1.somafm.com/u80s-128-mp3";
+// char *URL = "http://ice4.somafm.com/seventies-128-mp3";
 
 char topic1[] = "espaudio/espweb";
 const char *mqtt_server = "10.10.10.142";
@@ -57,7 +58,7 @@ void StatusCallback(void *cbData, int code, const char *string)
     Serial.printf("STATUS(%s) '%d' = '%s'\n", ptr, code, s1);
     Serial.flush();
 }
-void callback(char *topic, byte *payload, unsigned int length)
+void callback(char *topic, byte *payload, int8_t length)
 {
     String topicStr = topic;
     //EJ: Note:  the "topic" value gets overwritten everytime it receives confirmation (callback) message from MQTT
@@ -67,14 +68,23 @@ void callback(char *topic, byte *payload, unsigned int length)
 
     if (topicStr == topic1)
     {
-        Serial.println("topic match");
+        Serial.println("topic match, payload follows:");
+
         if (payload)
         {
+
             mp3->stop();
-            // memcpy(URL, payload, sizeof payload);
-            memcpy(URL, payload, 128);
-            URL[strlen(URL)] = '\0';
-            Serial.print(URL);
+            // create character buffer with ending null terminator (string) 
+            int8_t i;
+            char message_buff[150];
+            for (i = 0; i < length; i++)
+            {
+                message_buff[i] = payload[i];
+            }
+            message_buff[i] = '\0';
+            // String msgString = String(message_buff);
+            Serial.printf("URL = %s", message_buff);
+            URL = message_buff;
 
             file = new AudioFileSourceICYStream(URL);
             file->RegisterMetadataCB(MDCallback, (void *)"ICY");
@@ -217,8 +227,8 @@ void loop()
         if (millis() - lastms > 1000)
         {
             lastms = millis();
-            Serial.printf("Running for %d ms...\n", lastms);
-            Serial.flush();
+            // Serial.printf("Running for %d ms...\n", lastms);
+            // Serial.flush();
         }
         if (!mp3->loop())
         {
@@ -230,7 +240,7 @@ void loop()
     {
         if (millis() - lastms > 1000)
         {
-            
+
             lastms = millis();
             Serial.printf("MP3 done\n");
         }
