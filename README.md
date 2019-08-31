@@ -33,9 +33,9 @@ Once cloned, plug in your MQTT broker and wire up the DAC.
 I used the following arrangement:
 ```
 WemosD1 Mini    I2S Card
-```
------
-```
+
+--------------------------------
+
 5V              Vin
 Gnd             Gnd
 RX              Data/DIN
