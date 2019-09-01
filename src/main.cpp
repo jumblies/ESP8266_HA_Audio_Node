@@ -55,8 +55,14 @@ void StatusCallback(void *cbData, int code, const char *string)
     char s1[64];
     strncpy_P(s1, string, sizeof(s1));
     s1[sizeof(s1) - 1] = 0;
-    Serial.printf("STATUS(%s) '%d' = '%s'\n", ptr, code, s1);
-    Serial.flush();
+    // prevent deluge of debug msgs
+    static int lastms = 0;
+    if (millis() - lastms > 1000)
+    {
+        lastms = millis();
+        Serial.printf("STATUS(%s) '%d' = '%s'\n", ptr, code, s1);
+        Serial.flush();
+    }
 }
 void callback(char *topic, byte *payload, int8_t length)
 {
@@ -88,15 +94,15 @@ void callback(char *topic, byte *payload, int8_t length)
             // String msgString = String(message_buff);
             Serial.printf("URL = %s\n", message_buff);
             URL = message_buff;
-            delete(file);
+            delete (file);
             file = new AudioFileSourceICYStream(URL);
             file->RegisterMetadataCB(MDCallback, (void *)"ICY");
-            delete(buff);
+            delete (buff);
             buff = new AudioFileSourceBuffer(file, 2048);
             buff->RegisterStatusCB(StatusCallback, (void *)"buffer");
-            delete(out);
+            delete (out);
             out = new AudioOutputI2S();
-            delete(mp3);
+            delete (mp3);
             mp3 = new AudioGeneratorMP3();
 
             mp3->RegisterStatusCB(StatusCallback, (void *)"mp3");
@@ -241,15 +247,14 @@ void loop()
     }
     else
     {
-        if (millis() - lastms > 1000)
+        if (millis() - lastms > 5000)
         {
 
             lastms = millis();
             Serial.printf("Listening to MQTT\n");
             //Print out some debugging info
-            Serial.printf("Free Heap: %d\t Free Block Size: %d\t Frag Heap: %d\n" , ESP.getFreeHeap(), \
-            ESP.getMaxFreeBlockSize(),ESP.getHeapFragmentation() );
-
+            Serial.printf("Free Heap: %d\t Free Block Size: %d\t Frag Heap: %d\n", ESP.getFreeHeap(),
+                          ESP.getMaxFreeBlockSize(), ESP.getHeapFragmentation());
         }
     }
 }
