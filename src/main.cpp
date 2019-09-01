@@ -64,7 +64,10 @@ void callback(char *topic, byte *payload, int8_t length)
     //EJ: Note:  the "topic" value gets overwritten everytime it receives confirmation (callback) message from MQTT
 
     //Print out some debugging info
-    Serial.println("Callback update.");
+    Serial.printf("Callback update.\n Free Heap: %d\t", ESP.getFreeHeap());
+    Serial.printf("Free Block Size: %d\t", ESP.getMaxFreeBlockSize());
+    Serial.printf("Frag Heap: %d\t", ESP.getHeapFragmentation());
+    // mp3->loop(); Doesn't do anything.  Still stops responding.
 
     if (topicStr == topic1)
     {
@@ -74,7 +77,7 @@ void callback(char *topic, byte *payload, int8_t length)
         {
 
             mp3->stop();
-            // create character buffer with ending null terminator (string) 
+            // create character buffer with ending null terminator (string)
             int8_t i;
             char message_buff[150];
             for (i = 0; i < length; i++)
@@ -85,18 +88,18 @@ void callback(char *topic, byte *payload, int8_t length)
             // String msgString = String(message_buff);
             Serial.printf("URL = %s\n", message_buff);
             URL = message_buff;
-
+            delete(file);
             file = new AudioFileSourceICYStream(URL);
             file->RegisterMetadataCB(MDCallback, (void *)"ICY");
-
+            delete(buff);
             buff = new AudioFileSourceBuffer(file, 2048);
             buff->RegisterStatusCB(StatusCallback, (void *)"buffer");
-
+            delete(out);
             out = new AudioOutputI2S();
-
+            delete(mp3);
             mp3 = new AudioGeneratorMP3();
 
-            // mp3->RegisterStatusCB(StatusCallback, (void *)"mp3");
+            mp3->RegisterStatusCB(StatusCallback, (void *)"mp3");
             // Serial.println(buff->getFillLevel());
 
             mp3->begin(buff, out);
@@ -241,8 +244,12 @@ void loop()
         if (millis() - lastms > 1000)
         {
 
-            // lastms = millis();
-            // Serial.printf("MP3 done\n");
+            lastms = millis();
+            Serial.printf("Listening to MQTT\n");
+            //Print out some debugging info
+            Serial.printf("Free Heap: %d\t Free Block Size: %d\t Frag Heap: %d\n" , ESP.getFreeHeap(), \
+            ESP.getMaxFreeBlockSize(),ESP.getHeapFragmentation() );
+
         }
     }
 }
