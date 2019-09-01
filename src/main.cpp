@@ -21,7 +21,7 @@
 const char *URL = "http://ice1.somafm.com/u80s-128-mp3";
 // char *URL = "http://ice4.somafm.com/seventies-128-mp3";
 
-char topic1[] = "espaudio/espweb";
+const char topic1[] = "espaudio/espweb";
 const char *mqtt_server = "10.10.10.142";
 
 // Instantiate objects
@@ -83,7 +83,7 @@ void callback(char *topic, byte *payload, int8_t length)
             }
             message_buff[i] = '\0';
             // String msgString = String(message_buff);
-            Serial.printf("URL = %s", message_buff);
+            Serial.printf("URL = %s\n", message_buff);
             URL = message_buff;
 
             file = new AudioFileSourceICYStream(URL);
@@ -241,8 +241,8 @@ void loop()
         if (millis() - lastms > 1000)
         {
 
-            lastms = millis();
-            Serial.printf("MP3 done\n");
+            // lastms = millis();
+            // Serial.printf("MP3 done\n");
         }
     }
 }
