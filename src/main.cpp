@@ -70,14 +70,14 @@ void callback(char *topic, byte *payload, int8_t length)
     //EJ: Note:  the "topic" value gets overwritten everytime it receives confirmation (callback) message from MQTT
 
     //Print out some debugging info
-    Serial.printf("Callback update.\n Free Heap: %d\t", ESP.getFreeHeap());
-    Serial.printf("Free Block Size: %d\t", ESP.getMaxFreeBlockSize());
-    Serial.printf("Frag Heap: %d\t", ESP.getHeapFragmentation());
+    // Serial.printf("Callback update.\n Free Heap: %d\t", ESP.getFreeHeap());
+    // Serial.printf("Free Block Size: %d\t", ESP.getMaxFreeBlockSize());
+    // Serial.printf("Frag Heap: %d\t", ESP.getHeapFragmentation());
     // mp3->loop(); Doesn't do anything.  Still stops responding.
 
     if (topicStr == topic1)
     {
-        Serial.println("topic match, payload follows:");
+        // Serial.println("topic match, payload follows:");
 
         if (payload)
         {
@@ -175,7 +175,6 @@ void setup()
 
     //set custom ip for portal
     //wifiManager.setAPStaticIPConfig(IPAddress(10,0,1,1), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
-
     //fetches ssid and pass from eeprom and tries to connect
     //if it does not connect it starts an access point with the specified name
     //here  "AutoConnectAP"
@@ -183,16 +182,13 @@ void setup()
     wifiManager.autoConnect("AutoConnectAP");
     //or use this for auto generated name ESP + ChipID
     //wifiManager.autoConnect();
-
     //if you get here you have connected to the WiFi
     Serial.println("connected...yeey :)");
 
     //   WiFi.disconnect();
     //   WiFi.softAPdisconnect(true);
     //   WiFi.mode(WIFI_STA);
-
     //   WiFi.begin(SSID, PASSWORD);
-
     //   // Try forever
     //   while (WiFi.status() != WL_CONNECTED) {
     //     Serial.println("...Connecting to WiFi");
