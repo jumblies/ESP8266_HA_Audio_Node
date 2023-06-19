@@ -5,10 +5,10 @@
 #else
 #include <ESP8266WiFi.h>
 #endif
-#include "AudioFileSourceICYStream.h"
-#include "AudioFileSourceBuffer.h"
-#include "AudioGeneratorMP3.h"
-#include "AudioOutputI2S.h"
+#include <AudioFileSourceICYStream.h>
+#include <AudioFileSourceBuffer.h>
+#include <AudioGeneratorMP3.h>
+#include <AudioOutputI2S.h>
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h> //https://github.com/tzapu/WiFiManager
@@ -23,6 +23,8 @@ const char *URL = "http://ice1.somafm.com/u80s-128-mp3";
 
 const char topic1[] = "espaudio/espweb";
 const char *mqtt_server = "10.10.10.142";
+const char user[] = "glamke";
+const char passwd[] = "glamke";
 
 // Instantiate objects
 WiFiClient espClient;
@@ -67,13 +69,13 @@ void StatusCallback(void *cbData, int code, const char *string)
 void callback(char *topic, byte *payload, int8_t length)
 {
     String topicStr = topic;
-    //EJ: Note:  the "topic" value gets overwritten everytime it receives confirmation (callback) message from MQTT
+    // EJ: Note:  the "topic" value gets overwritten everytime it receives confirmation (callback) message from MQTT
 
-    //Print out some debugging info
-    // Serial.printf("Callback update.\n Free Heap: %d\t", ESP.getFreeHeap());
-    // Serial.printf("Free Block Size: %d\t", ESP.getMaxFreeBlockSize());
-    // Serial.printf("Frag Heap: %d\t", ESP.getHeapFragmentation());
-    // mp3->loop(); Doesn't do anything.  Still stops responding.
+    // Print out some debugging info
+    //  Serial.printf("Callback update.\n Free Heap: %d\t", ESP.getFreeHeap());
+    //  Serial.printf("Free Block Size: %d\t", ESP.getMaxFreeBlockSize());
+    //  Serial.printf("Frag Heap: %d\t", ESP.getHeapFragmentation());
+    //  mp3->loop(); Doesn't do anything.  Still stops responding.
 
     if (topicStr == topic1)
     {
@@ -114,23 +116,23 @@ void callback(char *topic, byte *payload, int8_t length)
 }
 void reconnect()
 {
-    //attempt to connect to the wifi if connection is lost
+    // attempt to connect to the wifi if connection is lost
     if (WiFi.status() != WL_CONNECTED)
     {
-        //loop while we wait for connection
+        // loop while we wait for connection
         while (WiFi.status() != WL_CONNECTED)
         {
             delay(500);
             Serial.print(".");
         }
 
-        //print out some more debug once connected
+        // print out some more debug once connected
         Serial.println("");
         Serial.println("WiFi connected");
         Serial.println("IP address: ");
         Serial.println(WiFi.localIP());
     }
-    //make sure we are connected to WIFI before attemping to reconnect to MQTT
+    // make sure we are connected to WIFI before attemping to reconnect to MQTT
     if (WiFi.status() == WL_CONNECTED)
     {
         // Loop until we're reconnected to the MQTT server
@@ -142,15 +144,15 @@ void reconnect()
             String clientName;
             clientName += "espmp3";
 
-            //if connected, subscribe to the topic(s) we want to be notified about
-            //EJ: Delete "mqtt_username", and "mqtt_password" here if you are not using any
-            if (client.connect((char *)clientName.c_str(), "", ""))
+            // if connected, subscribe to the topic(s) we want to be notified about
+            // EJ: Delete "mqtt_username", and "mqtt_password" here if you are not using any
+            if (client.connect((char *)clientName.c_str(), user, passwd))
             {
-                //EJ: Update accordingly with your MQTT account
+                // EJ: Update accordingly with your MQTT account
                 Serial.println("\tMQTT Connected");
                 client.subscribe(topic1);
             }
-            //otherwise print failed for debugging
+            // otherwise print failed for debugging
             else
             {
                 Serial.println("\tFailed.");
@@ -170,19 +172,19 @@ void setup()
 
     // WiFi.begin(SSID, PASSWORD);
     WiFiManager wifiManager;
-    //reset saved settings
-    // wifiManager.resetSettings();
+    // reset saved settings
+    //  wifiManager.resetSettings();
 
-    //set custom ip for portal
-    //wifiManager.setAPStaticIPConfig(IPAddress(10,0,1,1), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
-    //fetches ssid and pass from eeprom and tries to connect
-    //if it does not connect it starts an access point with the specified name
-    //here  "AutoConnectAP"
-    //and goes into a blocking loop awaiting configuration
+    // set custom ip for portal
+    // wifiManager.setAPStaticIPConfig(IPAddress(10,0,1,1), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
+    // fetches ssid and pass from eeprom and tries to connect
+    // if it does not connect it starts an access point with the specified name
+    // here  "AutoConnectAP"
+    // and goes into a blocking loop awaiting configuration
     wifiManager.autoConnect("AutoConnectAP");
-    //or use this for auto generated name ESP + ChipID
-    //wifiManager.autoConnect();
-    //if you get here you have connected to the WiFi
+    // or use this for auto generated name ESP + ChipID
+    // wifiManager.autoConnect();
+    // if you get here you have connected to the WiFi
     Serial.println("connected...yeey :)");
 
     //   WiFi.disconnect();
@@ -213,10 +215,22 @@ void setup()
 void loop()
 {
 
-    if (!client.connected())
+    static int lastms = 0;
+    static int mqtt_timer = 0;
+
+    // Checks to see if the MQTT connection is alive every 5 secs
+    if (millis() - mqtt_timer > 5000)
     {
-        reconnect();
+        mqtt_timer = millis();
+        // client.publish(topic1, "still connected");  //this causes reset
+
+        if (!client.connected())
+        {
+            reconnect();
+            // client.publish(topic1, "reconnected");  // this will stop the stream playing
+        }
     }
+
     client.loop();
 
     if (mp3->isRunning())
@@ -224,7 +238,6 @@ void loop()
         if (!mp3->loop())
             mp3->stop();
     }
-    static int lastms = 0;
 
     if (mp3->isRunning())
     {
@@ -248,7 +261,7 @@ void loop()
 
             lastms = millis();
             Serial.printf("Listening to MQTT\n");
-            //Print out some debugging info
+            // Print out some debugging info
             Serial.printf("Free Heap: %d\t Free Block Size: %d\t Frag Heap: %d\n", ESP.getFreeHeap(),
                           ESP.getMaxFreeBlockSize(), ESP.getHeapFragmentation());
         }
